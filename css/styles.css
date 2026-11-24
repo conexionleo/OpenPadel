@@ -307,8 +307,7 @@ body::before {
 
 .court-wrap {
   position: relative;
-  width: min(100%, calc((100vh - 130px) * 2.0476));
-  width: min(100%, calc((100svh - 130px) * 2.0476));
+  width: 100%;
   margin-inline: auto;
   filter: drop-shadow(0 26px 34px rgba(0, 0, 0, 0.55));
 }

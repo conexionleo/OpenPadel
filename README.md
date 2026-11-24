@@ -208,6 +208,7 @@ tests/scoring-tests.html   ejecutor de pruebas en el navegador
 tests/scoring-tests.js     las 25 pruebas de puntuación y voz
 tools/serve.ps1            servidor estático para desarrollo (Windows)
 docs/                      capturas para el README
+RESUMEN.md                 resumen del desarrollo y estado del proyecto
 ```
 
 ## Personalización rápida
