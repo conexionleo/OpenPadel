@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Open Padel · Marcador de pádel</title>
+  <meta name="description" content="Marcador de pádel con pista: el equipo que va ganando pinta su mitad de verde y el que va perdiendo la suya de rojo.">
+  <meta name="theme-color" content="#070d18">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <svg class="svg-defs" aria-hidden="true" focusable="false">
+    <defs>
+      <linearGradient id="frameGrad" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#22344f"/>
+        <stop offset=".55" stop-color="#111d30"/>
+        <stop offset="1" stop-color="#1b2c45"/>
+      </linearGradient>
+      <linearGradient id="courtBase" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#12304f"/>
+        <stop offset=".5" stop-color="#0d2540"/>
+        <stop offset="1" stop-color="#143658"/>
+      </linearGradient>
+      <linearGradient id="greenTint" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#22c55e"/>
+        <stop offset=".55" stop-color="#16a34a"/>
+        <stop offset="1" stop-color="#0f7d38"/>
+      </linearGradient>
+      <linearGradient id="redTint" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#ef4444"/>
+        <stop offset=".55" stop-color="#dc2626"/>
+        <stop offset="1" stop-color="#a81d1d"/>
+      </linearGradient>
+      <linearGradient id="shine" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#ffffff" stop-opacity=".55"/>
+        <stop offset=".45" stop-color="#ffffff" stop-opacity=".06"/>
+        <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+      </linearGradient>
+      <pattern id="netMesh" width="10" height="10" patternUnits="userSpaceOnUse">
+        <rect width="10" height="10" fill="#e2e8f0"/>
+        <path d="M0 10 10 0M0 0h10v10H0z" fill="none" stroke="#94a3b8" stroke-width="1" opacity=".55"/>
+      </pattern>
+    </defs>
+  </svg>
+
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <img class="brand-icon" src="assets/favicon.svg" alt="" width="44" height="44">
+        <div class="brand-text">
+          <h1>Open <span>Padel</span></h1>
+          <p>Marcador de pádel · al mejor de 3 sets</p>
+        </div>
+      </div>
+
+      <div class="top-actions">
+        <span class="status-badge is-live" id="statusBadge" role="status" aria-live="polite">En juego</span>
+        <button class="icon-btn" id="undoBtn" type="button" title="Deshacer último punto (Ctrl+Z)" aria-label="Deshacer último punto" disabled>
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M9 7 4 12l5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M4 12h9a6 6 0 0 1 0 12h-1" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" transform="translate(0 -5)"/>
+          </svg>
+        </button>
+        <button class="btn btn-ghost" id="newMatchBtn" type="button">Nuevo partido</button>
+      </div>
+    </header>
+
+    <main class="layout">
+      <section class="court-panel" aria-label="Pista de pádel">
+        <div class="court-wrap">
+          <svg class="court court--wide" viewBox="0 0 860 420" aria-hidden="true" focusable="false">
+            <!-- Marco de cristal -->
+            <rect x="10" y="10" width="840" height="400" rx="18" fill="url(#frameGrad)" stroke="rgba(255,255,255,.16)" stroke-width="1.5"/>
+            <rect x="24" y="24" width="812" height="372" rx="8" fill="none" stroke="rgba(186,230,253,.22)" stroke-width="2"/>
+
+            <!-- Cristal lateral: reflejos -->
+            <path d="M90 18h680" stroke="rgba(255,255,255,.10)" stroke-width="4" stroke-linecap="round"/>
+            <path d="M120 402h640" stroke="rgba(255,255,255,.07)" stroke-width="3" stroke-linecap="round"/>
+
+            <!-- Mitad izquierda: Equipo B (Norte) -->
+            <g class="half-group" data-team="b">
+              <rect x="30" y="30" width="400" height="360" fill="url(#courtBase)"/>
+              <rect class="tint tint-green" x="30" y="30" width="400" height="360" fill="url(#greenTint)"/>
+              <rect class="tint tint-red" x="30" y="30" width="400" height="360" fill="url(#redTint)"/>
+              <rect x="30" y="30" width="400" height="360" fill="url(#shine)" opacity=".08" pointer-events="none"/>
+              <g class="court-lines" pointer-events="none">
+                <!-- Línea de servicio: 3,05 m desde la pared del fondo (6,95 m de la red). -->
+                <line x1="152" y1="30" x2="152" y2="390"/>
+                <!-- Línea central de saque: de la red a la línea de servicio. -->
+                <line x1="152" y1="210" x2="430" y2="210"/>
+              </g>
+              <g class="half-text" pointer-events="none">
+                <text class="side-label" x="230" y="64">NORTE</text>
+                <text class="team-label" data-field="name" data-team="b" x="230" y="100">Equipo B</text>
+                <text class="big-points" data-field="points" data-team="b" x="230" y="242">0</text>
+                <text class="meta" data-field="meta" data-team="b" x="230" y="294">Sets 0 · Juegos 0</text>
+                <text class="tap-hint" data-field="hint" data-team="b" x="230" y="346">TOCA PARA SUMAR</text>
+              </g>
+            </g>
+
+            <!-- Red -->
+            <g class="net" pointer-events="none">
+              <rect x="424" y="22" width="12" height="376" rx="6" fill="#cbd5e1" opacity=".9"/>
+              <rect x="424" y="22" width="12" height="376" rx="6" fill="url(#netMesh)" opacity=".9"/>
+              <line x1="430" y1="30" x2="430" y2="390" stroke="#0f172a" stroke-width="1.5" stroke-dasharray="5 7" opacity=".35"/>
+              <rect x="417" y="14" width="26" height="10" rx="4" fill="#e2e8f0"/>
+              <rect x="417" y="396" width="26" height="10" rx="4" fill="#e2e8f0"/>
+            </g>
+
+            <!-- Mitad derecha: Equipo A (Sur) -->
+            <g class="half-group" data-team="a">
+              <rect x="430" y="30" width="400" height="360" fill="url(#courtBase)"/>
+              <rect class="tint tint-green" x="430" y="30" width="400" height="360" fill="url(#greenTint)"/>
+              <rect class="tint tint-red" x="430" y="30" width="400" height="360" fill="url(#redTint)"/>
+              <rect x="430" y="30" width="400" height="360" fill="url(#shine)" opacity=".06" pointer-events="none"/>
+              <g class="court-lines" pointer-events="none">
+                <!-- Línea de servicio: 3,05 m desde la pared del fondo (6,95 m de la red). -->
+                <line x1="708" y1="30" x2="708" y2="390"/>
+                <!-- Línea central de saque: de la red a la línea de servicio. -->
+                <line x1="430" y1="210" x2="708" y2="210"/>
+              </g>
+              <g class="half-text" pointer-events="none">
+                <text class="side-label" x="630" y="64">SUR</text>
+                <text class="team-label" data-field="name" data-team="a" x="630" y="100">Equipo A</text>
+                <text class="big-points" data-field="points" data-team="a" x="630" y="242">0</text>
+                <text class="meta" data-field="meta" data-team="a" x="630" y="294">Sets 0 · Juegos 0</text>
+                <text class="tap-hint" data-field="hint" data-team="a" x="630" y="346">TOCA PARA SUMAR</text>
+              </g>
+            </g>
+          </svg>
+
+          <svg class="court court--tall" viewBox="0 0 420 860" aria-hidden="true" focusable="false">
+
+            <!-- Marco de cristal -->
+            <rect x="10" y="10" width="400" height="840" rx="18" fill="url(#frameGrad)" stroke="rgba(255,255,255,.16)" stroke-width="1.5"/>
+            <rect x="24" y="24" width="372" height="812" rx="8" fill="none" stroke="rgba(186,230,253,.22)" stroke-width="2"/>
+
+            <!-- Cristal lateral: reflejos -->
+            <path d="M18 90v680" stroke="rgba(255,255,255,.10)" stroke-width="4" stroke-linecap="round"/>
+            <path d="M402 120v640" stroke="rgba(255,255,255,.07)" stroke-width="3" stroke-linecap="round"/>
+
+            <!-- Mitad superior: Equipo B -->
+            <g class="half-group" data-team="b">
+              <rect x="30" y="30" width="360" height="400" fill="url(#courtBase)"/>
+              <rect class="tint tint-green" x="30" y="30" width="360" height="400" fill="url(#greenTint)"/>
+              <rect class="tint tint-red" x="30" y="30" width="360" height="400" fill="url(#redTint)"/>
+              <rect x="30" y="30" width="360" height="400" fill="url(#shine)" opacity=".08" pointer-events="none"/>
+              <g class="court-lines" pointer-events="none">
+                <!-- Línea de servicio: 3,05 m desde la pared del fondo (6,95 m de la red). -->
+                <line x1="30" y1="152" x2="390" y2="152"/>
+                <!-- Línea central de saque: de la red a la línea de servicio. -->
+                <line x1="210" y1="152" x2="210" y2="430"/>
+              </g>
+              <g class="half-text" pointer-events="none">
+                <text class="side-label" x="210" y="52">NORTE</text>
+                <text class="team-label" data-field="name" data-team="b" x="210" y="78">Equipo B</text>
+                <text class="big-points" data-field="points" data-team="b" x="210" y="328">0</text>
+                <text class="meta" data-field="meta" data-team="b" x="210" y="374">Sets 0 · Juegos 0</text>
+                <text class="tap-hint" data-field="hint" data-team="b" x="210" y="414">TOCA PARA SUMAR</text>
+              </g>
+            </g>
+
+            <!-- Red -->
+            <g class="net" pointer-events="none">
+              <rect x="22" y="424" width="376" height="12" rx="6" fill="#cbd5e1" opacity=".9"/>
+              <rect x="22" y="424" width="376" height="12" rx="6" fill="url(#netMesh)" opacity=".9"/>
+              <line x1="30" y1="430" x2="390" y2="430" stroke="#0f172a" stroke-width="1.5" stroke-dasharray="5 7" opacity=".35"/>
+              <rect x="14" y="417" width="10" height="26" rx="4" fill="#e2e8f0"/>
+              <rect x="396" y="417" width="10" height="26" rx="4" fill="#e2e8f0"/>
+            </g>
+
+            <!-- Mitad inferior: Equipo A -->
+            <g class="half-group" data-team="a">
+              <rect x="30" y="430" width="360" height="400" fill="url(#courtBase)"/>
+              <rect class="tint tint-green" x="30" y="430" width="360" height="400" fill="url(#greenTint)"/>
+              <rect class="tint tint-red" x="30" y="430" width="360" height="400" fill="url(#redTint)"/>
+              <rect x="30" y="430" width="360" height="400" fill="url(#shine)" opacity=".06" pointer-events="none"/>
+              <g class="court-lines" pointer-events="none">
+                <!-- Línea de servicio: 3,05 m desde la pared del fondo (6,95 m de la red). -->
+                <line x1="30" y1="708" x2="390" y2="708"/>
+                <!-- Línea central de saque: de la red a la línea de servicio. -->
+                <line x1="210" y1="430" x2="210" y2="708"/>
+              </g>
+              <g class="half-text" pointer-events="none">
+                <text class="tap-hint" data-field="hint" data-team="a" x="210" y="452">TOCA PARA SUMAR</text>
+                <text class="big-points" data-field="points" data-team="a" x="210" y="606">0</text>
+                <text class="meta" data-field="meta" data-team="a" x="210" y="650">Sets 0 · Juegos 0</text>
+                <text class="side-label" x="210" y="770">SUR</text>
+                <text class="team-label" data-field="name" data-team="a" x="210" y="796">Equipo A</text>
+              </g>
+            </g>
+          </svg>
+          <div class="court-glow" aria-hidden="true"></div>
+        </div>
+        <p class="court-help">
+          Toca una mitad para sumar
+          <span class="sep">·</span> <kbd>1</kbd><kbd>2</kbd>
+          <span class="sep">·</span> <kbd>Ctrl</kbd>+<kbd>Z</kbd> deshacer
+        </p>
+      </section>
+
+      <aside class="score-panel" aria-label="Marcador del partido">
+        <div class="panel-head">
+          <h2>Marcador</h2>
+          <span class="set-pill" id="setLabel">Set 1 de 3</span>
+        </div>
+
+        <article class="team-card" id="cardA">
+          <header class="team-head">
+            <span class="color-dot" aria-hidden="true"></span>
+            <input class="team-input" id="inputA" type="text" maxlength="24" value="Equipo A"
+                   aria-label="Nombre del equipo A" autocomplete="off" spellcheck="false">
+            <span class="state-label" id="stateA">Empate</span>
+          </header>
+          <div class="stats">
+            <div class="stat">
+              <span class="stat-label">Sets</span>
+              <span class="stat-value" id="setsA">0</span>
+            </div>
+            <div class="stat">
+              <span class="stat-label">Juegos</span>
+              <span class="stat-value" id="gamesA">0</span>
+            </div>
+            <div class="stat stat-points">
+              <span class="stat-label">Puntos</span>
+              <span class="stat-value points-value" id="ptsA">0</span>
+            </div>
+          </div>
+          <button class="btn point-btn" id="btnA" type="button" aria-label="+ Punto 1 · Equipo A">
+            <span class="plus" aria-hidden="true">+</span> Punto <span class="key-badge" aria-hidden="true">1</span>
+          </button>
+        </article>
+
+        <article class="team-card" id="cardB">
+          <header class="team-head">
+            <span class="color-dot" aria-hidden="true"></span>
+            <input class="team-input" id="inputB" type="text" maxlength="24" value="Equipo B"
+                   aria-label="Nombre del equipo B" autocomplete="off" spellcheck="false">
+            <span class="state-label" id="stateB">Empate</span>
+          </header>
+          <div class="stats">
+            <div class="stat">
+              <span class="stat-label">Sets</span>
+              <span class="stat-value" id="setsB">0</span>
+            </div>
+            <div class="stat">
+              <span class="stat-label">Juegos</span>
+              <span class="stat-value" id="gamesB">0</span>
+            </div>
+            <div class="stat stat-points">
+              <span class="stat-label">Puntos</span>
+              <span class="stat-value points-value" id="ptsB">0</span>
+            </div>
+          </div>
+          <button class="btn point-btn" id="btnB" type="button" aria-label="+ Punto 2 · Equipo B">
+            <span class="plus" aria-hidden="true">+</span> Punto <span class="key-badge" aria-hidden="true">2</span>
+          </button>
+        </article>
+
+        <div class="set-history" id="setHistory" aria-label="Historial de sets">
+          <span class="set-history-label">Sets</span>
+          <span class="set-chips" id="setChips"><span class="set-chip is-current">0-0</span></span>
+        </div>
+
+        <section class="voice-box" id="voiceBox" aria-labelledby="voiceTitle">
+          <div class="voice-head">
+            <span class="voice-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" focusable="false">
+                <rect x="9" y="3" width="6" height="11" rx="3" fill="none" stroke="currentColor" stroke-width="1.8"/>
+                <path d="M5.5 11a6.5 6.5 0 0 0 13 0" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                <path d="M12 17.5V21M9 21h6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+              </svg>
+            </span>
+            <div class="voice-copy">
+              <h3 id="voiceTitle">Control por voz</h3>
+              <p id="voiceHelp">«Punto Norte» arriba · «Punto Sur» abajo</p>
+            </div>
+            <button class="btn voice-toggle" id="voiceBtn" type="button" aria-pressed="false" hidden>
+              <span id="voiceBtnText">Activar</span>
+            </button>
+          </div>
+
+          <div class="voice-consent" id="voiceConsent" hidden>
+            <p>¿Quieres usar el micrófono para sumar puntos diciendo «Punto Norte» o «Punto Sur»?</p>
+            <div class="voice-consent-actions">
+              <button class="btn" id="voiceAllowBtn" type="button">Sí, activar</button>
+              <button class="btn btn-ghost" id="voiceDismissBtn" type="button">Ahora no</button>
+            </div>
+          </div>
+
+          <p class="voice-status" id="voiceStatus" role="status" aria-live="polite">
+            <span class="voice-dot" aria-hidden="true"></span>
+            <span id="voiceStatusText">Micrófono desactivado</span>
+          </p>
+          <p class="voice-heard" id="voiceHeard"></p>
+        </section>
+
+        <div class="panel-footer">
+          <label class="switch" for="goldenToggle">
+            <input type="checkbox" id="goldenToggle">
+            <span class="switch-track" aria-hidden="true"><span class="switch-thumb"></span></span>
+            <span class="switch-label">Punto de oro</span>
+          </label>
+          <span class="save-note" id="saveNote">Guardado en este navegador</span>
+        </div>
+      </aside>
+    </main>
+
+    <footer class="footer">
+      <span>Open Padel</span>
+      <span class="dot">·</span>
+      <span>HTML, CSS y JavaScript sin dependencias</span>
+      <span class="dot">·</span>
+      <span>Listo para GitHub Pages</span>
+    </footer>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <noscript>
+    <p class="noscript">Open Padel necesita JavaScript para funcionar.</p>
+  </noscript>
+
+  <script src="js/scoring.js"></script>
+  <script src="js/voice.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
