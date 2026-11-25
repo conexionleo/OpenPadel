@@ -105,8 +105,27 @@
   }
 
   /**
-   * Equipo que va ganando: primero por sets, luego por juegos del set actual,
-   * luego por puntos. Devuelve 'a', 'b' o null si hay empate.
+   * Equipo que va por delante en el juego en curso según los puntos mostrados
+   * (incluido el tie-break). Devuelve 'a', 'b' o null si hay empate.
+   * Los juegos y sets anteriores no cuentan para el color.
+   */
+  function gameLeader(match) {
+    if (match.winner) return match.winner;
+
+    if (match.tieBreak) {
+      var ta = match.tieBreak.points.a;
+      var tb = match.tieBreak.points.b;
+      if (ta !== tb) return ta > tb ? 'a' : 'b';
+      return null;
+    }
+
+    if (match.points.a !== match.points.b) return match.points.a > match.points.b ? 'a' : 'b';
+    return null;
+  }
+
+  /**
+   * Equipo que va ganando el partido: primero por sets, luego por juegos del
+   * set actual y luego por puntos. Devuelve 'a', 'b' o null si hay empate.
    */
   function leader(match) {
     if (match.winner) return match.winner;
@@ -284,6 +303,7 @@
     currentSetNumber: currentSetNumber,
     isDeuce: isDeuce,
     displayPoints: displayPoints,
+    gameLeader: gameLeader,
     leader: leader,
     statusText: statusText
   };

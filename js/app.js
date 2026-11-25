@@ -11,6 +11,7 @@
 
   var STORAGE_KEY = 'openpadel.match.v1';
   var VOICE_CONSENT_KEY = 'openpadel.voiceConsent.v1';
+  var WAKE_KEY = 'openpadel.wakeLock.v1';
   var MAX_HISTORY = 60;
 
   function all(selector) {
@@ -45,6 +46,9 @@
     undoBtn: document.getElementById('undoBtn'),
     newMatchBtn: document.getElementById('newMatchBtn'),
     goldenToggle: document.getElementById('goldenToggle'),
+    wakeToggle: document.getElementById('wakeToggle'),
+    wakeSwitch: document.getElementById('wakeSwitch'),
+    wakeLabel: document.getElementById('wakeLabel'),
     statusBadge: document.getElementById('statusBadge'),
     setLabel: document.getElementById('setLabel'),
     setChips: document.getElementById('setChips'),
@@ -63,6 +67,11 @@
 
   var state = { match: null, history: [] };
   var toastTimer = null;
+  var wake = {
+    wanted: readWakePref(),
+    sentinel: null,
+    requesting: false
+  };
   var voice = {
     supported: false,
     active: false,
@@ -99,6 +108,14 @@
     } catch (e) {
       if (els.saveNote) els.saveNote.textContent = 'Sin guardado automático';
     }
+  }
+
+  function readWakePref() {
+    try { return localStorage.getItem(WAKE_KEY) !== 'off'; } catch (e) { return true; }
+  }
+
+  function writeWakePref(enabled) {
+    try { localStorage.setItem(WAKE_KEY, enabled ? 'on' : 'off'); } catch (e) {}
   }
 
   /* ---------- Utilidades de interfaz ---------- */
@@ -543,7 +560,8 @@
     var match = state.match;
     if (!match) return;
 
-    var lead = OP.leader(match);
+    // El color sigue al juego en curso, no a los sets ni juegos anteriores.
+    var lead = OP.gameLeader(match);
     var setsA = OP.setsWon(match, 'a');
     var setsB = OP.setsWon(match, 'b');
     var ptsA = OP.displayPoints(match, 'a');
@@ -639,6 +657,66 @@
     }
   }
 
+  /* ---------- Pantalla encendida (Screen Wake Lock) ---------- */
+
+  function wakeAvailable() {
+    return !!(navigator.wakeLock &&
+      typeof navigator.wakeLock.request === 'function' &&
+      window.isSecureContext);
+  }
+
+  function updateWakeUI() {
+    if (!els.wakeToggle) return;
+
+    var available = wakeAvailable();
+    els.wakeToggle.disabled = !available;
+    els.wakeToggle.checked = available && wake.wanted;
+
+    if (els.wakeSwitch) els.wakeSwitch.classList.toggle('is-unavailable', !available);
+
+    if (!available) {
+      setText(els.wakeLabel, 'Pantalla encendida (HTTPS)');
+      els.wakeToggle.title = 'Necesita HTTPS o localhost y un navegador compatible';
+    } else {
+      setText(els.wakeLabel, 'Pantalla encendida');
+      els.wakeToggle.title = wake.sentinel
+        ? 'La pantalla permanecerá encendida mientras la pestaña esté visible'
+        : 'Mantener la pantalla encendida durante el partido';
+    }
+  }
+
+  function requestWake() {
+    if (!wake.wanted || !wakeAvailable()) return Promise.resolve(false);
+    if (document.visibilityState !== 'visible') return Promise.resolve(false);
+    if (wake.sentinel || wake.requesting) return Promise.resolve(true);
+
+    wake.requesting = true;
+
+    return navigator.wakeLock.request('screen').then(function (sentinel) {
+      wake.sentinel = sentinel;
+      sentinel.addEventListener('release', function () {
+        wake.sentinel = null;
+        updateWakeUI();
+      });
+      return true;
+    }).catch(function () {
+      return false;
+    }).then(function (ok) {
+      wake.requesting = false;
+      updateWakeUI();
+      return ok;
+    });
+  }
+
+  function releaseWake() {
+    var sentinel = wake.sentinel;
+    wake.sentinel = null;
+    if (sentinel) {
+      try { sentinel.release(); } catch (e) {}
+    }
+    updateWakeUI();
+  }
+
   /* ---------- Eventos ---------- */
 
   function bindHalf(group, team) {
@@ -659,6 +737,20 @@
     state.match = OP.setGoldenPoint(state.match, els.goldenToggle.checked);
     save();
     render();
+  });
+
+  els.wakeToggle.addEventListener('change', function () {
+    wake.wanted = els.wakeToggle.checked;
+    writeWakePref(wake.wanted);
+
+    if (wake.wanted) {
+      requestWake().then(function (ok) {
+        if (!ok) toast('No se pudo mantener la pantalla encendida');
+      });
+    } else {
+      releaseWake();
+      toast('La pantalla podrá apagarse con normalidad');
+    }
   });
 
   els.inputA.addEventListener('input', function () { onNameInput('a', els.inputA); });
@@ -690,6 +782,20 @@
     updateVoiceUI();
     toast('Puedes activar el micrófono cuando quieras con el botón Activar');
   });
+
+  // Al volver a la pestaña se vuelve a pedir el bloqueo de pantalla.
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'visible' && wake.wanted) requestWake();
+  });
+
+  // Algunos navegadores (Safari) exigen un gesto del usuario para concederlo.
+  var unlockWake = function () {
+    if (wake.wanted) requestWake();
+    document.removeEventListener('pointerdown', unlockWake);
+    document.removeEventListener('keydown', unlockWake);
+  };
+  document.addEventListener('pointerdown', unlockWake);
+  document.addEventListener('keydown', unlockWake);
 
   // Al girar el dispositivo cambia la orientación de la pista y la ayuda de voz.
   if (window.matchMedia) {
@@ -739,6 +845,8 @@
   var initial = load();
   state.match = initial.match;
   state.history = initial.history;
+  updateWakeUI();
+  if (wake.wanted) requestWake();
   initVoice();
   render();
 })();

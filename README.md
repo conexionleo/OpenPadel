@@ -1,22 +1,27 @@
 # Open Padel
 
 Marcador de pádel para el navegador. Una pista con dos equipos, uno a cada lado:
-**el equipo que va ganando pinta su mitad de verde y el que va perdiendo pinta la suya
-de rojo**; si van empatados, las dos mitades se pintan de verde. Todo el marcador
-(puntos, juegos y sets) se calcula según las reglas del pádel. También puedes sumar
-puntos con la voz diciendo **«Punto Norte»** o **«Punto Sur»**. La pista ocupa el ancho
-de la pantalla en horizontal y gira a vertical para llenar el alto en el móvil.
+**el equipo que va por delante en el juego en curso pinta su mitad de verde y el que va
+por detrás pinta la suya de rojo**; si van empatados, las dos mitades se pintan de
+verde. Al empezar cada juego vuelve a haber empate visual (0-0), aunque un equipo haya
+ganado juegos o sets anteriores. Todo el marcador (puntos, juegos y sets) se calcula
+según las reglas del pádel. También puedes sumar puntos con la voz diciendo **«Punto
+Norte»** o **«Punto Sur»**. La pista ocupa el ancho de la pantalla en horizontal y gira
+a vertical para llenar el alto en el móvil.
 
 ![Captura de Open Padel](docs/captura-desktop.png)
 
 ## Características
 
 - **Pista de pádel interactiva**: toca la mitad de un equipo para sumar un punto.
-  Las mitades cambian de color al instante (verde = va ganando, rojo = va perdiendo;
-  si hay empate, las dos se pintan de verde).
+  Las mitades cambian de color al instante (verde = va por delante en el juego, rojo =
+  va por detrás; si hay empate, las dos se pintan de verde). El color se reinicia en
+  cada juego: al empezar el siguiente, 0-0 vuelve a ser empate visual.
 - **Marcador completo**: 0 · 15 · 30 · 40, ventaja, juegos, sets y tie-break.
 - **Partido al mejor de 3 sets**, con tie-break a las 6-6.
 - **Punto de oro opcional**: a 40-40 el siguiente punto decide el juego.
+- **Pantalla encendida**: en móviles compatibles evita que la pantalla se apague
+  mientras dura el partido (requiere HTTPS o `localhost`).
 - **Nombres de equipo editables** (se conservan al empezar un partido nuevo).
 - **Control por voz**: con el micrófono activado, di **«Punto Norte»** para sumar al
   equipo B y **«Punto Sur»** para el equipo A. En la pista vertical el Norte está arriba
@@ -44,10 +49,15 @@ servicio, dividiendo la zona de saque en dos.
 
 ![Captura móvil](docs/captura-movil.png)
 
-### Empate
+### Empate y cambio de juego
 
-Cuando el marcador está igualado (por ejemplo, a 40-40), las dos mitades de la pista
-se pintan de verde por igual.
+Cuando el marcador del juego está igualado (por ejemplo, 0-0 al empezar un juego, 15-15
+o 40-40), las dos mitades de la pista se pintan de verde por igual.
+
+El color sigue **solo a los puntos del juego en curso** (o del tie-break). Los juegos y
+sets ya ganados no influyen. Así, si A gana el primer juego y el segundo empieza 0-15
+para B, B se ve verde y A rojo aunque A vaya por delante en el set. Al llegar a 15-15,
+ambos vuelven a verse verdes.
 
 ![Captura de empate](docs/captura-empate.png)
 
@@ -60,8 +70,10 @@ se pintan de verde por igual.
 5. **Nuevo partido** reinicia el marcador (mantiene los nombres y la opción de punto de oro).
 6. Activa **Punto de oro** si el partido se juega con esa regla.
 
-La mitad verde es siempre la del equipo que va ganando y la roja la del que va
-perdiendo. Si el marcador está empatado, las dos mitades se pintan de verde por igual.
+La mitad verde es siempre la del equipo que va por delante en los puntos del juego en
+curso y la roja la del que va por detrás. Si el juego está empatado, las dos mitades se
+pintan de verde por igual. Al empezar un juego nuevo, ambas vuelven a verse verdes con
+el 0-0.
 
 ## Control por voz
 
@@ -101,6 +113,26 @@ revoca el permiso. Puedes consultar el estado y la última frase oída en el pro
   y no lo envía a ningún servidor propio. Solo se guarda en `localStorage` tu decisión
   sobre el consentimiento.
 
+## Mantener la pantalla encendida
+
+En el pie del marcador hay un interruptor **Pantalla encendida**, activado por defecto.
+Usa la [Screen Wake Lock API](https://developer.mozilla.org/es/docs/Web/API/Screen_Wake_Lock_API)
+del navegador para pedirle al sistema que no apague la pantalla mientras el partido está
+en marcha.
+
+- Funciona en **Chrome, Edge, Samsung Internet y Safari 16.4 o posterior** (iOS y iPadOS
+  incluidos), siempre que el navegador no la bloquee.
+- Necesita un **contexto seguro**: `https://` (GitHub Pages) o `localhost`. Por HTTP en
+  la red local el interruptor aparece desactivado con el aviso «Pantalla encendida
+  (HTTPS)».
+- Al cambiar de pestaña el navegador libera el bloqueo; la app lo vuelve a pedir al
+  regresar.
+- Algunos navegadores exigen un primer toque en la página para concederlo; la app lo
+  reintenta con el primer gesto.
+- Si el sistema operativo o el ahorro de batería lo impiden, el marcador sigue
+  funcionando con normalidad.
+- La preferencia se guarda en `localStorage` (`openpadel.wakeLock.v1`).
+
 ## Reglas implementadas
 
 - Puntos: `0`, `15`, `30`, `40`.
@@ -111,8 +143,9 @@ revoca el permiso. Puedes consultar el estado y la última frase oída en el pro
 - Tie-break: a las 6-6, primero en 7 puntos con 2 de diferencia. El set acaba 7-6.
 - Partido: al mejor de 3 sets; gana el primero en conseguir 2.
 
-Para decidir quién "va ganando" se compara, por orden: sets ganados, juegos del set
-actual y puntos del juego actual.
+El color y las etiquetas **Ganando / Perdiendo / Empate** de las tarjetas siguen a los
+puntos del juego en curso. Para el estado del partido (título de la pestaña, sets y
+ganador) se compara, por orden: sets ganados, juegos del set actual y puntos.
 
 ## Publicar en GitHub Pages
 
@@ -184,9 +217,9 @@ en una red de confianza.
 
 ## Pruebas
 
-La lógica de puntuación y el parser de voz tienen **25 pruebas automáticas** (puntos,
-ventaja, punto de oro, sets, tie-break, mejor de 3, inmutabilidad, guardado y comandos
-«Punto Norte» / «Punto Sur»). Abre:
+La lógica de puntuación y el parser de voz tienen **27 pruebas automáticas** (puntos,
+ventaja, punto de oro, sets, tie-break, color del juego, mejor de 3, inmutabilidad,
+guardado y comandos «Punto Norte» / «Punto Sur»). Abre:
 
 ```
 tests/scoring-tests.html
@@ -205,7 +238,7 @@ js/voice.js                parser de los comandos de voz
 js/app.js                  interfaz: estado, eventos, voz y localStorage
 assets/favicon.svg         icono de la web
 tests/scoring-tests.html   ejecutor de pruebas en el navegador
-tests/scoring-tests.js     las 25 pruebas de puntuación y voz
+tests/scoring-tests.js     las 27 pruebas de puntuación y voz
 tools/serve.ps1            servidor estático para desarrollo (Windows)
 docs/                      capturas para el README
 RESUMEN.md                 resumen del desarrollo y estado del proyecto

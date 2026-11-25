@@ -166,6 +166,37 @@
     eq(OP.leader(m), 'a');
   });
 
+  test('El color sigue al juego en curso, no a sets ni juegos ganados', function () {
+    var m = winGames(OP.createMatch(), 'a', 6);
+    eq(OP.gameLeader(m), null, '0-0 al empezar el set 2 es empate');
+
+    m = OP.addPoint(m, 'b');
+    eq(OP.gameLeader(m), 'b', 'B va por delante en el juego');
+    eq(OP.leader(m), 'a', 'el partido lo sigue ganando A');
+
+    m = OP.addPoint(m, 'a');
+    eq(OP.gameLeader(m), null, '15-15 vuelve a ser empate');
+  });
+
+  test('El color del juego usa los puntos y el tie-break', function () {
+    var m = play(OP.createMatch(), ['a', 'a', 'a']);
+    eq(OP.gameLeader(m), 'a', '40-0 para A');
+
+    m = play(m, ['b', 'b', 'b']);
+    eq(OP.gameLeader(m), null, '40-40 es empate');
+
+    m = OP.addPoint(m, 'a');
+    eq(OP.gameLeader(m), 'a', 'ventaja de A');
+
+    m = winGame(OP.createMatch(), 'a');
+    eq(OP.gameLeader(m), null, 'A gana un juego, pero el siguiente empieza 0-0');
+
+    var tb = toTieBreak();
+    eq(OP.gameLeader(tb), null, 'tie-break 0-0 es empate');
+    tb = OP.addPoint(tb, 'b');
+    eq(OP.gameLeader(tb), 'b', 'B va por delante en el tie-break');
+  });
+
   test('7-5 cierra el set sin tie-break', function () {
     var m = OP.createMatch();
     for (var i = 0; i < 5; i++) {
